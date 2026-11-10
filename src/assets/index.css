@@ -840,3 +840,47 @@ button {
     left: 0 !important;
   }
 }
+
+
+/* Inline conversation renaming in the existing history sidebar. */
+.flowise-history-edit {
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  width: 32px;
+  height: 38px;
+  flex: 0 0 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer !important;
+}
+.flowise-history-edit:hover { color: #0f4c81; background: #e3ebf7; }
+.flowise-history-edit:disabled { opacity: .4; cursor: not-allowed !important; }
+.flowise-history-rename-form {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 0 5px 6px;
+}
+.flowise-history-rename-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 36px;
+  border: 1px solid #93b4df;
+  border-radius: 8px;
+  background: #fff;
+  color: #1e293b;
+  font-size: 13px;
+  padding: 6px 8px;
+  outline: none;
+}
+.flowise-history-rename-input:focus { border-color: #0f4c81; box-shadow: 0 0 0 2px rgba(15, 76, 129, .12); }
+.flowise-history-edit:focus-visible { outline: 2px solid #3b81f6; outline-offset: 2px; }
+@media (max-width: 640px) {
+  .flowise-history-rename-input { font-size: 16px; }
+}
