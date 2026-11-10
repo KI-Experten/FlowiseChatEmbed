@@ -2,7 +2,8 @@ import { createSignal, Show, splitProps, onCleanup, createEffect, onMount } from
 import styles from '../../../assets/index.css';
 import { BubbleButton } from './BubbleButton';
 import { BubbleParams } from '../types';
-import { Bot, BotProps } from '../../../components/Bot';
+import { BotProps } from '../../../components/Bot';
+import { ChatWorkspace } from '@/components/ChatWorkspace';
 import Tooltip from './Tooltip';
 import { getBubbleButtonSize, resolveDialogContainer } from '@/utils';
 import DOMPurify from 'dompurify';
@@ -133,9 +134,9 @@ export const Bubble = (props: BubbleProps) => {
           display: 'flex',
           'flex-direction': 'column',
           overflow: 'hidden',
-          height: getChatWindowHeight(),
-          'max-height': getChatWindowMaxHeight(),
-          width: getChatWindowWidth(),
+          height: viewport().width <= 640 ? '100dvh' : getChatWindowHeight(),
+          'max-height': viewport().width <= 640 ? '100dvh' : getChatWindowMaxHeight(),
+          width: viewport().width <= 640 ? '100vw' : getChatWindowWidth(),
           transition: 'transform 200ms cubic-bezier(0, 1.2, 1, 1), opacity 150ms ease-out',
           'transform-origin': 'bottom right',
           transform: isBotOpened() ? 'scale3d(1, 1, 1)' : 'scale3d(0, 0, 1)',
@@ -146,8 +147,8 @@ export const Bubble = (props: BubbleProps) => {
           'background-position': 'center',
           'background-repeat': 'no-repeat',
           'z-index': 42424242,
-          bottom: `${Math.min(buttonPosition().bottom + buttonSize + 10, viewport().height - chatWindowBottom)}px`,
-          right: `${Math.max(0, Math.min(buttonPosition().right, viewport().width - getChatWindowWidthForPositioning() - 10))}px`,
+          bottom: viewport().width <= 640 ? '0px' : `${Math.min(buttonPosition().bottom + buttonSize + 10, viewport().height - chatWindowBottom)}px`,
+          right: viewport().width <= 640 ? '0px' : `${Math.max(0, Math.min(buttonPosition().right, viewport().width - getChatWindowWidthForPositioning() - 10))}px`,
         }}
         class={
           `fixed sm:right-5 rounded-lg ${hasCustomChatWindowWidth() ? '' : 'w-full sm:w-[400px]'}` +
@@ -160,22 +161,7 @@ export const Bubble = (props: BubbleProps) => {
             <div innerHTML={DOMPurify.sanitize(bubbleProps.theme?.chatWindow?.headerHtml ?? '')} />
           </Show>
           <div class="relative flex-1 min-h-0">
-            <Show when={isBotOpened()}>
-              {/* Cross button For only mobile screen use this <Show when={isBotOpened() && window.innerWidth <= 640}>  */}
-              <button
-                onClick={closeBot}
-                class="py-2 pr-3 absolute top-0 right-[-8px] m-[6px] bg-transparent text-white rounded-full z-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:brightness-100 transition-all filter hover:brightness-90 active:brightness-75"
-                title="Close Chat"
-              >
-                <svg viewBox="0 0 24 24" width="24" height="24">
-                  <path
-                    fill={bubbleProps.theme?.button?.iconColor ?? defaultIconColor}
-                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
-                  />
-                </svg>
-              </button>
-            </Show>
-            <Bot
+            <ChatWorkspace
               backgroundColor={bubbleProps.theme?.chatWindow?.backgroundColor}
               formBackgroundColor={bubbleProps.theme?.form?.backgroundColor}
               formTextColor={bubbleProps.theme?.form?.textColor}

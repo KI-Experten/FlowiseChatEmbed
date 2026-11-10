@@ -1,5 +1,6 @@
 import styles from '../../../assets/index.css';
-import { Bot, BotProps } from '@/components/Bot';
+import { BotProps } from '@/components/Bot';
+import { ChatWorkspace } from '@/components/ChatWorkspace';
 import { BubbleParams } from '@/features/bubble/types';
 import { createSignal, onCleanup, onMount, Show } from 'solid-js';
 import { resolveDialogContainer } from '@/utils';
@@ -69,7 +70,7 @@ export const Full = (props: FullProps, { element }: { element: HTMLElement }) =>
             overflow: 'hidden', // Ensure no extra scrolling due to content overflow
           }}
         >
-          <Bot
+          <ChatWorkspace
             backgroundColor={props.theme?.chatWindow?.backgroundColor}
             formBackgroundColor={props.theme?.form?.backgroundColor}
             formTextColor={props.theme?.form?.textColor}
