@@ -145,6 +145,18 @@ const CloseIcon = () => (
   </svg>
 );
 
+const EditIcon = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4 10.5-10.5Z" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+    <path d="m5 12 4 4L19 6" />
+  </svg>
+);
+
 const TrashIcon = () => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
     <path d="M3 6h18M8 6V4h8v2m3 0-1 15H6L5 6m5 4v7m4-7v7" />
@@ -160,6 +172,8 @@ export const ChatWorkspace = (props: ChatWorkspaceProps) => {
   const [threads, setThreads] = createSignal<ChatThread[]>(initial.threads);
   const [historyOpen, setHistoryOpen] = createSignal(false);
   const [busy, setBusy] = createSignal(false);
+  const [editingId, setEditingId] = createSignal<string | null>(null);
+  const [editedTitle, setEditedTitle] = createSignal('');
 
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   let pendingMessages: MessageType[] | undefined;
@@ -241,8 +255,30 @@ export const ChatWorkspace = (props: ChatWorkspaceProps) => {
     activateSession(thread.id, thread.chatId, thread.messages);
   };
 
+  const startRenaming = (thread: ChatThread) => {
+    flushMessages();
+    setEditingId(thread.id);
+    setEditedTitle(thread.title);
+  };
+
+  const cancelRenaming = () => {
+    setEditingId(null);
+    setEditedTitle('');
+  };
+
+  const saveRenaming = (id: string) => {
+    const title = editedTitle().trim().slice(0, 100);
+    if (!title) return;
+    flushMessages();
+    const updated = threads().map((thread) => (thread.id === id ? { ...thread, title } : thread));
+    setThreads(updated);
+    writeThreads(props.chatflowid, updated);
+    cancelRenaming();
+  };
+
   const deleteThread = (thread: ChatThread) => {
     if (busy() || !window.confirm('Diesen Chat wirklich löschen?')) return;
+    if (editingId() === thread.id) cancelRenaming();
     flushMessages();
     const next = threads().filter((item) => item.id !== thread.id);
     setThreads(next);
@@ -273,17 +309,76 @@ export const ChatWorkspace = (props: ChatWorkspaceProps) => {
               <For each={threads()}>
                 {(thread) => (
                   <div class={'flowise-history-item ' + (thread.id === activeId() ? 'flowise-history-item-active' : '')}>
-                    <button
-                      class="flowise-history-item-open"
-                      type="button"
-                      disabled={busy()}
-                      onClick={() => openThread(thread)}
-                      aria-current={thread.id === activeId() ? 'page' : undefined}
-                      title={thread.title}
+                    <Show
+                      when={editingId() === thread.id}
+                      fallback={
+                        <>
+                          <button
+                            class="flowise-history-item-open"
+                            type="button"
+                            disabled={busy()}
+                            onClick={() => openThread(thread)}
+                            aria-current={thread.id === activeId() ? 'page' : undefined}
+                            title={thread.title}
+                          >
+                            <span class="flowise-history-item-title">{thread.title}</span>
+                            <span class="flowise-history-item-date">{new Date(thread.updatedAt).toLocaleDateString('de-DE')}</span>
+                          </button>
+                          <button
+                            class="flowise-history-edit"
+                            type="button"
+                            disabled={busy()}
+                            aria-label={'Chat umbenennen: ' + thread.title}
+                            title="Chat umbenennen"
+                            onClick={() => startRenaming(thread)}
+                          >
+                            <EditIcon />
+                          </button>
+                        </>
+                      }
                     >
-                      <span class="flowise-history-item-title">{thread.title}</span>
-                      <span class="flowise-history-item-date">{new Date(thread.updatedAt).toLocaleDateString('de-DE')}</span>
-                    </button>
+                      <form
+                        class="flowise-history-rename-form"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          saveRenaming(thread.id);
+                        }}
+                      >
+                        <input
+                          class="flowise-history-rename-input"
+                          type="text"
+                          aria-label="Neuer Chattitel"
+                          maxlength="100"
+                          value={editedTitle()}
+                          onInput={(event) => setEditedTitle(event.currentTarget.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Escape') {
+                              event.preventDefault();
+                              cancelRenaming();
+                            }
+                          }}
+                          ref={(element) => queueMicrotask(() => element.focus())}
+                        />
+                        <button
+                          class="flowise-history-edit"
+                          type="submit"
+                          disabled={!editedTitle().trim()}
+                          aria-label="Chattitel speichern"
+                          title="Speichern"
+                        >
+                          <CheckIcon />
+                        </button>
+                        <button
+                          class="flowise-history-edit"
+                          type="button"
+                          aria-label="Umbenennen abbrechen"
+                          title="Abbrechen"
+                          onClick={cancelRenaming}
+                        >
+                          <CloseIcon />
+                        </button>
+                      </form>
+                    </Show>
                     <button
                       class="flowise-history-delete"
                       type="button"
