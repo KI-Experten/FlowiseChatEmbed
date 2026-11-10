@@ -334,9 +334,9 @@ export const ChatWorkspace = (props: ChatWorkspaceProps) => {
           </Show>
         </header>
         <div class="flowise-history-bot">
-          <Show when={activeId()} keyed>
+          <For each={[activeId()]}>
             {() => <Bot {...props} showTitle={false} clearChatOnReload={false} observersConfig={observers} />}
-          </Show>
+          </For>
         </div>
       </section>
     </div>
